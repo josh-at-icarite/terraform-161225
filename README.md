@@ -23,7 +23,7 @@ Configuration Options
 | `location` | `"New Zealand North"` | Azure region for deployment |
 | `resource_group_name` | `"rg-web-demo"` | Name of the resource group |
 | `vm_size` | `"Standard_B1s"` | Azure VM size |
-| `docker_image` | `"joshdevicarite"` | Docker image to run on hosts |
+| `docker_image` | `"joshdevicarite/custom-nginx:latest"` | Docker image to run on hosts |
 | `instance_count` | `2` | Number of VMs (minimum 2 for N+1) for fixed capacity |
 
 ### Customizing Deployment
@@ -40,7 +40,7 @@ terraform apply\
 Architecture Details
 --------------------
 
-!(/Architecture_Diagram.png)
+![An image of the architecture diagram](./Architecture_Diagram.png)
 
 ### Components
 
