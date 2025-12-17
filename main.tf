@@ -215,9 +215,65 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
               EOF
   )
 
-# Set up an autoscale monitor to keep the number of VMs at 2
-# Use the var.instance_count to set default, min and max as 2
-# Reuse the old Ptero deployment code but remove the maximum and minimum instance count
+# Use the Linux Application Health extension to check whether nginx is up, as opposed to the VM
+  extension {
+    name                       = "health"
+    publisher                  = "Microsoft.ManagedServices"
+    type                       = "ApplicationHealthLinux"
+    type_handler_version       = "1.0"
+    auto_upgrade_minor_version = true
+    settings = jsonencode({
+      protocol    = "http"
+      port        = 80
+      requestPath = "/"
+    })
+  }
+
+  # Automatic instance repair for the self-healing bit
+  # 10 minutes' grace period so the VM can spin up
+  automatic_instance_repair {
+    enabled      = true
+    grace_period = "PT10M"
+  }
+
+  tags = {
+    environment = "dev"
+  }
+  # Ensures the load balancer is up and running before spinning up VMs
+  depends_on = [azurerm_lb_rule.main]
+}
+
+# Autoscaler config
+# Sets up an autoscale monitor to keep the number of VMs at 2
+# Uses the var.instance_count to set default, min and max as 2
+resource "azurerm_monitor_autoscale_setting" "main" {
+  name                = "autoscale-webdemo"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  target_resource_id  = azurerm_linux_virtual_machine_scale_set.main.id
+
+  # Ensures VMSS is actually set up and has a resource ID before trying to set autoscaling
+  depends_on = [azurerm_linux_virtual_machine_scale_set.main]
+  
+  profile {
+    name = "webdemo-fixed-capacity"
+
+    capacity {
+      default = var.instance_count
+      minimum = var.instance_count
+      maximum = var.instance_count
+    }
+    
+  }
+
+  notification {
+    email {
+      send_to_subscription_administrator    = false
+      send_to_subscription_co_administrator = false
+    }
+  }
+}
+
 
 # Outputs
 output "load_balancer_ip" {
