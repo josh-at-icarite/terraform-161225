@@ -142,6 +142,7 @@ resource "azurerm_lb_rule" "main" {
 # systemctl enable nginx
 # EOF
 # )
+# Eventually this custom data will be replaced with the docker configuration.
 resource "azurerm_linux_virtual_machine_scale_set" "main" {
 
 }
