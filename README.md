@@ -45,8 +45,8 @@ Architecture Details
 ### Components
 
 - **Resource Group**: Container for all resources
-- **Virtual Network**: Isolated network (10.0.0.0/16)
-- **Subnet**: Web tier subnet (10.0.1.0/24)
+- **Virtual Network**: Isolated network (172.16.0.0/16)
+- **Subnet**: Web tier subnet (172.16.1.0/24)
 - **Network Security Group**: Firewall rules (allows HTTP on port 80)
 - **Public IP**: Static IP for load balancer
 - **Load Balancer**: Distributes traffic across VMs
