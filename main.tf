@@ -54,7 +54,7 @@ variable "instance_count" {
 variable "docker_image" {
   description = "Docker image to run (format: user/image:tag or ghcr.io/user/image:tag)"
   type        = string
-  default     = "nginx:alpine"
+  default     = "joshdevicarite/custom-nginx:latest"
 }
 
 ## Set resources
