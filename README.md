@@ -137,6 +137,7 @@ Assumptions and Compromises
 -------------
 
 This is a demonstration and as such a number of decisions make this completely unsuitable for production.
+
 -   SSH keys are stored in the Terraform state
 -   HTTPS is not implemented
 -   No additional security hardening has been implemented
