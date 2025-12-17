@@ -130,7 +130,7 @@ resource "azurerm_lb_probe" "main" {
   number_of_probes    = 2
 }
 
-# Forwarding from the load balancer to the nginx servers
+# Forwarding web traffic from the load balancer to the docker hosts
 # Load Balancer Rule
 resource "azurerm_lb_rule" "main" {
   loadbalancer_id                = azurerm_lb.main.id
@@ -144,7 +144,6 @@ resource "azurerm_lb_rule" "main" {
 }
 
 # Network Security Group setup
-# Just inbound 80 at the moment, run-command should be fine for testing
 resource "azurerm_network_security_group" "web" {
   name                = "nsg-web"
   location            = azurerm_resource_group.main.location
@@ -170,7 +169,6 @@ resource "azurerm_subnet_network_security_group_association" "web" {
 }
 
 # Virtual machine scale set config
-# Eventually this custom data will be replaced with the docker configuration.
 resource "azurerm_linux_virtual_machine_scale_set" "main" {
   name                = "vmss-web"
   location            = azurerm_resource_group.main.location
@@ -213,6 +211,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
     network_security_group_id = azurerm_network_security_group.web.id
   }
 
+  # Set up docker and pull down the specified image (or the default if no params passed)
   custom_data = base64encode(<<-EOF
               #!/bin/bash
 
@@ -260,7 +259,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
               EOF
   )
 
-# Use the Linux Application Health extension to check whether nginx is up, as opposed to the VM
+# Use the Linux Application Health extension to check whether nginx is up on port 80,
   extension {
     name                       = "health"
     publisher                  = "Microsoft.ManagedServices"
@@ -289,7 +288,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
 }
 
 # Autoscaler config
-# Sets up an autoscale monitor to keep the number of VMs at 2
+# Sets up an autoscale monitor to keep the number of VMs at 2 (or whatever the end user passes as a parameter)
 # Uses the var.instance_count to set default, min and max as 2
 resource "azurerm_monitor_autoscale_setting" "main" {
   name                = "autoscale-webdemo"
