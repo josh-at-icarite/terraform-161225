@@ -6,12 +6,12 @@ A fully automated, self-healing web infrastructure deployed on Azure using Terra
 Features
 --------
 
--   **Self-Healing**: Failed instances automatically replaced within 15-20 minutes
--   **Self-Provisioning**: One command deploys everything
--   **N+1 Capacity**: Minimum 2 instances behind load balancer; can survive single VM failure with zero downtime
--   **Containerised**: NGINX runs in Docker containers for consistent deployments
--   **Web Container Agnostic**: Can run any web container via passing variable on ```terraform apply```
--   **Zone-Redundant**: VMs distributed across 3 availability zones
+- **Self-Healing**: Failed instances automatically replaced within 15-20 minutes
+- **Self-Provisioning**: One command deploys everything
+- **N+1 Capacity**: Minimum 2 instances behind load balancer; can survive single VM failure with zero downtime
+- **Containerised**: NGINX runs in Docker containers for consistent deployments
+- **Web Container Agnostic**: Can run any web container via passing variable on ```terraform apply```
+- **Zone-Redundant**: VMs distributed across 3 availability zones
 
 Configuration Options
 ---------------------
@@ -44,16 +44,16 @@ Architecture Details
 
 ### Components
 
--   **Resource Group**: Container for all resources
--   **Virtual Network**: Isolated network (10.0.0.0/16)
--   **Subnet**: Web tier subnet (10.0.1.0/24)
--   **Network Security Group**: Firewall rules (allows HTTP on port 80)
--   **Public IP**: Static IP for load balancer
--   **Load Balancer**: Distributes traffic across VMs
--   **Health Probe**: HTTP checks on port 80 every 15 seconds
--   **Virtual Machine Scale Set**: Manages 2 identical VMs across a potential 3 zones for redundancy
--   **Application Health Extension**: Monitors app health from inside VM
--   **Autoscaler**: Enforces a fixed capacity of 2 instances
+- **Resource Group**: Container for all resources
+- **Virtual Network**: Isolated network (10.0.0.0/16)
+- **Subnet**: Web tier subnet (10.0.1.0/24)
+- **Network Security Group**: Firewall rules (allows HTTP on port 80)
+- **Public IP**: Static IP for load balancer
+- **Load Balancer**: Distributes traffic across VMs
+- **Health Probe**: HTTP checks on port 80 every 15 seconds
+- **Virtual Machine Scale Set**: Manages 2 identical VMs across a potential 3 zones for redundancy
+- **Application Health Extension**: Monitors app health from inside VM
+- **Autoscaler**: Enforces a fixed capacity of 2 instances
 
 ### Auto-Healing Process
 
@@ -74,13 +74,13 @@ Prerequisites
 
 ### Required Tools
 
--   [Terraform](https://www.terraform.io/downloads) v1.0 or higher
--   [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+- [Terraform](https://www.terraform.io/downloads) v1.0 or higher
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 
 ### Azure Requirements
 
--   Active Azure subscription
--   Contributor access to create resources
+- Active Azure subscription
+- Contributor access to create resources
 
 ### Authentication
 
@@ -127,10 +127,10 @@ Cost Estimate
 
 **Monthly costs (approximate):**
 
--   2× Standard_B1s VMs: ~$20
--   Load Balancer (Standard): ~$20
--   Public IP (Standard): ~$4
--   **Total: ~$44/month**
+- 2× Standard_B1s VMs: ~$20
+- Load Balancer (Standard): ~$20
+- Public IP (Standard): ~$4
+- **Total: ~$44/month**
 
 
 Assumptions and Compromises
@@ -138,8 +138,8 @@ Assumptions and Compromises
 
 This is a demonstration and as such a number of decisions make this completely unsuitable for production:
 
--   SSH keys are stored in the Terraform state
--   HTTPS is not implemented
--   No additional security hardening has been implemented
--   No form of access into the instances outside of invoking Azure run-command, as port 22 is locked down
--   Not possible to deploy solution for less than AUD $20 on Azure, but it's what I know best and I've minimised costs as best I can.
+- SSH keys are stored in the Terraform state
+- HTTPS is not implemented
+- No additional security hardening has been implemented
+- No form of access into the instances outside of invoking Azure run-command, as port 22 is locked down
+- Not possible to deploy solution for less than AUD $20 on Azure, but it's what I know best and I've minimised costs as best I can.
