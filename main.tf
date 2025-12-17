@@ -112,7 +112,16 @@ resource "azurerm_lb_backend_address_pool" "main" {
   name            = "web-lb-backend-pool"
 }
 
-# Set up a health probe here
+# Health probe, checks every 15 seconds
+resource "azurerm_lb_probe" "main" {
+  loadbalancer_id = azurerm_lb.main.id
+  name            = "http-probe"
+  protocol        = "Http"
+  port            = 80
+  request_path    = "/"
+  interval_in_seconds = 15
+  number_of_probes    = 2
+}
 
 # Forwarding from the load balancer to the nginx servers
 # Load Balancer Rule
@@ -127,25 +136,84 @@ resource "azurerm_lb_rule" "main" {
   probe_id                       = azurerm_lb_probe.main.id
 }
 
+# Network Security Group setup
+# Just inbound 80 at the moment, run-command should be fine for testing
+resource "azurerm_network_security_group" "web" {
+  name                = "nsg-web"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
 
-# NSGs here
+  security_rule {
+    name                       = "allow-http"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+}
 
 # Link the NSG with the web services subnet
+resource "azurerm_subnet_network_security_group_association" "web" {
+  subnet_id                 = azurerm_subnet.web.id
+  network_security_group_id = azurerm_network_security_group.web.id
+}
 
 # Virtual machine scale set config
-# use 22_04 LTS
-# custom_data = base64encode(<<-EOF
-# #!/bin/bash
-# apt-get update -y
-# apt-get install -y nginx
-# systemctl start nginx
-# systemctl enable nginx
-# EOF
-# )
 # Eventually this custom data will be replaced with the docker configuration.
 resource "azurerm_linux_virtual_machine_scale_set" "main" {
+  name                = "vmss-web"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = var.vm_size
+  instances           = var.instance_count
+  admin_username      = "webdemo-admin"
+  upgrade_mode        = "Manual"
+  zones               = ["1", "2", "3"]
+  zone_balance        = true
 
-}
+  admin_ssh_key {
+    username   = "webdemo-admin"
+    public_key = tls_private_key.ssh.public_key_openssh
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
+
+  os_disk {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  network_interface {
+    name    = "nic"
+    primary = true
+
+    ip_configuration {
+      name                                   = "internal"
+      primary                                = true
+      subnet_id                              = azurerm_subnet.web.id
+      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.main.id]
+    }
+
+    network_security_group_id = azurerm_network_security_group.web.id
+  }
+
+  custom_data = base64encode(<<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y nginx
+              systemctl start nginx
+              systemctl enable nginx
+              EOF
+  )
 
 # Set up an autoscale monitor to keep the number of VMs at 2
 # Use the var.instance_count to set default, min and max as 2
