@@ -99,6 +99,7 @@ Quick Start
 
 ```
 # Initialize Terraform (downloads providers)
+terraform init
 
 # Preview changes
 terraform plan
