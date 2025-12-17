@@ -50,6 +50,13 @@ variable "instance_count" {
   }
 }
 
+# Docker image for the webpage containerisation. Defaults to nginx:alpine for space reasons.
+variable "docker_image" {
+  description = "Docker image to run (format: user/image:tag or ghcr.io/user/image:tag)"
+  type        = string
+  default     = "nginx:alpine"
+}
+
 ## Set resources
 # For the Azure stuff, prefix azurerm_ for tidiness
 
@@ -208,10 +215,48 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
 
   custom_data = base64encode(<<-EOF
               #!/bin/bash
+
+              # Terminate script if there's an error
+              set -e
+              
+              # Update package list
               apt-get update -y
-              apt-get install -y nginx
-              systemctl start nginx
-              systemctl enable nginx
+              
+              # Install Docker dependencies
+              apt-get install -y \
+                ca-certificates \
+                curl \
+                gnupg \
+                lsb-release
+              
+              # Add Docker GPG key
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+              
+              # Set up Docker repo
+              echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+                $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+              
+              # Install Docker Engine
+              apt-get update -y
+              apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+              
+              # Start Docker service
+              systemctl start docker
+              systemctl enable docker
+              
+              # Pull the container image
+              docker pull ${var.docker_image}
+              
+              # Run the container
+              docker run \
+                --name web-app \
+                --restart unless-stopped \
+                -p 80:80 \
+                -d \
+                ${var.docker_image}
               EOF
   )
 
