@@ -137,15 +137,9 @@ Cost Estimate
 Assumptions and Compromises
 -------------
 
-Azure was selected for the following reasons:
-
-- I'm familiar with the environment
-- VMSS handles the provisioning and auto-healing effectively as a single resource, making the solution leaner
-
 This is a demonstration and as such a number of decisions make this completely unsuitable for production:
 
 - SSH keys are stored in the Terraform state
 - HTTPS is not implemented
 - No additional security hardening has been implemented
 - No form of access into the instances outside of invoking Azure run-command, as port 22 is locked down
-- Not possible to deploy solution for less than AUD $20 on Azure, but it's what I know best and I've minimised costs as best I can.
